@@ -10,4 +10,7 @@ runs:
   steps:
     - name: Install release-pilot
       shell: bash
-      run: bash "${{ github.action_path }}/../install.sh" "${{ inputs.version }}"
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: bash "$ACTION_PATH/../install.sh" "$INPUT_VERSION"

@@ -11,17 +11,28 @@ case "$ARCH" in
   *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
 esac
 
+if [[ "$VERSION" != "latest" ]]; then
+  if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    printf 'Error: unexpected version format: %s\n' "$VERSION" >&2
+    exit 1
+  fi
+fi
+
 if [[ "$VERSION" == "latest" ]]; then
   VERSION="$(curl -fsSL https://api.github.com/repos/dakaneye/release-pilot/releases/latest | grep '"tag_name"' | head -1 | cut -d'"' -f4)"
+  if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    printf 'Error: unexpected version format: %s\n' "$VERSION" >&2
+    exit 1
+  fi
 fi
 
 URL="https://github.com/dakaneye/release-pilot/releases/download/${VERSION}/release-pilot_${VERSION#v}_${OS}_${ARCH}.tar.gz"
 
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
+WORK_DIR="$(mktemp -d)"
+trap 'rm -rf "$WORK_DIR"' EXIT
 
-curl -fsSL "$URL" -o "$TMPDIR/release-pilot.tar.gz"
-tar -xzf "$TMPDIR/release-pilot.tar.gz" -C "$TMPDIR"
-install -m 755 "$TMPDIR/release-pilot" /usr/local/bin/release-pilot
+curl -fsSL "$URL" -o "$WORK_DIR/release-pilot.tar.gz"
+tar -xzf "$WORK_DIR/release-pilot.tar.gz" -C "$WORK_DIR"
+install -m 755 "$WORK_DIR/release-pilot" /usr/local/bin/release-pilot
 
 echo "release-pilot ${VERSION} installed"

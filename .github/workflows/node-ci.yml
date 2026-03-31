@@ -38,6 +38,7 @@ jobs:
         run: npm ci
 
       - name: Build
+        if: inputs.build-command != ''
         run: ${{ inputs.build-command }}
 
       - name: Test

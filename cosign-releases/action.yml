@@ -16,7 +16,7 @@ runs:
   using: "composite"
   steps:
     - name: Install cosign
-      uses: sigstore/cosign-installer@3454372be428fdd352e907b3fa6f8fbe8a3a8a3b # v3
+      uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
       with:
         cosign-release: ${{ inputs.cosign-version != 'latest' && inputs.cosign-version || '' }}
 
@@ -29,15 +29,8 @@ runs:
       run: |
         set -Eeuo pipefail
 
-        TMPDIR="$(mktemp -d)"
-        trap 'rm -rf "$TMPDIR"' EXIT
-
-        # List all release assets
-        ASSETS=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
-        if [[ -z "$ASSETS" ]]; then
-          echo "No assets found for release $RELEASE_TAG"
-          exit 0
-        fi
+        WORK_DIR="$(mktemp -d)"
+        trap 'rm -rf "$WORK_DIR"' EXIT
 
         echo "Signing assets for release $RELEASE_TAG"
 
@@ -57,22 +50,25 @@ runs:
           echo "Signing: $ASSET"
 
           # Download asset
-          gh release download "$RELEASE_TAG" --pattern "$ASSET" --dir "$TMPDIR" --clobber
+          gh release download "$RELEASE_TAG" --pattern "$ASSET" --dir "$WORK_DIR" --clobber \
+            || { printf 'Error: download failed for asset %s\n' "$ASSET" >&2; exit 1; }
 
           # Sign with cosign (keyless OIDC)
           cosign sign-blob --yes \
-            --output-signature "$TMPDIR/${ASSET}.sig" \
-            --output-certificate "$TMPDIR/${ASSET}.pem" \
-            --bundle "$TMPDIR/${ASSET}.bundle" \
-            "$TMPDIR/$ASSET"
+            --output-signature "$WORK_DIR/${ASSET}.sig" \
+            --output-certificate "$WORK_DIR/${ASSET}.pem" \
+            --bundle "$WORK_DIR/${ASSET}.bundle" \
+            "$WORK_DIR/$ASSET" \
+            || { printf 'Error: cosign signing failed for %s\n' "$ASSET" >&2; exit 1; }
 
           # Upload signature and bundle to release
           gh release upload "$RELEASE_TAG" \
-            "$TMPDIR/${ASSET}.sig" \
-            "$TMPDIR/${ASSET}.bundle" \
-            --clobber
+            "$WORK_DIR/${ASSET}.sig" \
+            "$WORK_DIR/${ASSET}.bundle" \
+            --clobber \
+            || { printf 'Error: upload failed for signed assets of %s\n' "$ASSET" >&2; exit 1; }
 
           echo "Signed: $ASSET"
-        done <<< "$ASSETS"
+        done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
 
         echo "All assets signed."

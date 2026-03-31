@@ -13,6 +13,11 @@ on:
         type: boolean
         required: false
         default: false
+      only-fixed:
+        description: "Only report vulnerabilities with available fixes"
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   contents: read
@@ -31,7 +36,7 @@ jobs:
           path: "."
           fail-build: ${{ inputs.fail-build }}
           severity-cutoff: ${{ inputs.severity-cutoff }}
-          only-fixed: true
+          only-fixed: ${{ inputs.only-fixed }}
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@5c8a8a642e79153f5d047b10ec1cba1d1cc65699 # v3

@@ -9,7 +9,7 @@ on:
         required: false
         default: ""
       lint-version:
-        description: "golangci-lint version"
+        description: "golangci-lint v2.x version"
         type: string
         required: false
         default: "latest"
@@ -23,11 +23,6 @@ on:
         type: boolean
         required: false
         default: false
-      build-command:
-        description: "Build command (default: go build ./...)"
-        type: string
-        required: false
-        default: "go build ./..."
     secrets:
       codecov-token:
         required: false
@@ -48,7 +43,7 @@ jobs:
           go-version-file: ${{ inputs.go-version == '' && 'go.mod' || '' }}
 
       - name: Build
-        run: ${{ inputs.build-command }}
+        run: go build ./...
 
   test:
     runs-on: ubuntu-latest
