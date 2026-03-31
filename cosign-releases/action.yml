@@ -1,0 +1,78 @@
+name: "cosign-releases"
+description: "Sign all GitHub Release assets with keyless Sigstore signing"
+inputs:
+  release-tag:
+    description: "Release tag to sign assets for"
+    required: true
+  exclude-pattern:
+    description: "Glob pattern to exclude assets from signing (e.g., '*.txt')"
+    required: false
+    default: ""
+  cosign-version:
+    description: "Cosign version to install"
+    required: false
+    default: "latest"
+runs:
+  using: "composite"
+  steps:
+    - name: Install cosign
+      uses: sigstore/cosign-installer@3454372be428fdd352e907b3fa6f8fbe8a3a8a3b # v3
+      with:
+        cosign-release: ${{ inputs.cosign-version != 'latest' && inputs.cosign-version || '' }}
+
+    - name: Sign release assets
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        RELEASE_TAG: ${{ inputs.release-tag }}
+        EXCLUDE: ${{ inputs.exclude-pattern }}
+      run: |
+        set -Eeuo pipefail
+
+        TMPDIR="$(mktemp -d)"
+        trap 'rm -rf "$TMPDIR"' EXIT
+
+        # List all release assets
+        ASSETS=$(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
+        if [[ -z "$ASSETS" ]]; then
+          echo "No assets found for release $RELEASE_TAG"
+          exit 0
+        fi
+
+        echo "Signing assets for release $RELEASE_TAG"
+
+        while IFS= read -r ASSET; do
+          # Skip signature and bundle files
+          if [[ "$ASSET" == *.sig || "$ASSET" == *.bundle ]]; then
+            echo "Skipping signature file: $ASSET"
+            continue
+          fi
+
+          # Skip excluded patterns
+          if [[ -n "$EXCLUDE" ]] && [[ "$ASSET" == $EXCLUDE ]]; then
+            echo "Skipping excluded: $ASSET"
+            continue
+          fi
+
+          echo "Signing: $ASSET"
+
+          # Download asset
+          gh release download "$RELEASE_TAG" --pattern "$ASSET" --dir "$TMPDIR" --clobber
+
+          # Sign with cosign (keyless OIDC)
+          cosign sign-blob --yes \
+            --output-signature "$TMPDIR/${ASSET}.sig" \
+            --output-certificate "$TMPDIR/${ASSET}.pem" \
+            --bundle "$TMPDIR/${ASSET}.bundle" \
+            "$TMPDIR/$ASSET"
+
+          # Upload signature and bundle to release
+          gh release upload "$RELEASE_TAG" \
+            "$TMPDIR/${ASSET}.sig" \
+            "$TMPDIR/${ASSET}.bundle" \
+            --clobber
+
+          echo "Signed: $ASSET"
+        done <<< "$ASSETS"
+
+        echo "All assets signed."
