@@ -1,0 +1,111 @@
+name: Go CI
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version to use (default: reads go.mod)"
+        type: string
+        required: false
+        default: ""
+      lint-version:
+        description: "golangci-lint version"
+        type: string
+        required: false
+        default: "latest"
+      run-race:
+        description: "Enable race detector in tests"
+        type: boolean
+        required: false
+        default: true
+      codecov:
+        description: "Upload coverage to Codecov"
+        type: boolean
+        required: false
+        default: false
+      build-command:
+        description: "Build command (default: go build ./...)"
+        type: string
+        required: false
+        default: "go build ./..."
+    secrets:
+      codecov-token:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: ${{ inputs.go-version || null }}
+          go-version-file: ${{ inputs.go-version == '' && 'go.mod' || '' }}
+
+      - name: Build
+        run: ${{ inputs.build-command }}
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: ${{ inputs.go-version || null }}
+          go-version-file: ${{ inputs.go-version == '' && 'go.mod' || '' }}
+
+      - name: Test
+        run: |
+          RACE_FLAG=""
+          if [[ "${{ inputs.run-race }}" == "true" ]]; then
+            RACE_FLAG="-race"
+          fi
+          go test -v ${RACE_FLAG} -coverprofile=coverage.out ./...
+
+      - name: Upload coverage
+        if: inputs.codecov
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6
+        with:
+          files: coverage.out
+          fail_ci_if_error: false
+          token: ${{ secrets.codecov-token }}
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: ${{ inputs.go-version || null }}
+          go-version-file: ${{ inputs.go-version == '' && 'go.mod' || '' }}
+
+      - name: Install golangci-lint
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${{ inputs.lint-version }}
+
+      - name: golangci-lint
+        run: golangci-lint run ./...
+
+  tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: ${{ inputs.go-version || null }}
+          go-version-file: ${{ inputs.go-version == '' && 'go.mod' || '' }}
+
+      - name: Check go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
