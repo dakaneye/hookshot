@@ -18,8 +18,13 @@ if [[ "$VERSION" != "latest" ]]; then
   fi
 fi
 
+AUTH_HEADER=()
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  AUTH_HEADER=(-H "Authorization: Bearer $GITHUB_TOKEN")
+fi
+
 if [[ "$VERSION" == "latest" ]]; then
-  VERSION="$(curl -fsSL https://api.github.com/repos/dakaneye/release-pilot/releases/latest | grep '"tag_name"' | head -1 | cut -d'"' -f4)"
+  VERSION="$(curl -fsSL "${AUTH_HEADER[@]}" https://api.github.com/repos/dakaneye/release-pilot/releases/latest | grep '"tag_name"' | head -1 | cut -d'"' -f4)"
   if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
     printf 'Error: unexpected version format: %s\n' "$VERSION" >&2
     exit 1
@@ -31,7 +36,7 @@ URL="https://github.com/dakaneye/release-pilot/releases/download/${VERSION}/rele
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-curl -fsSL "$URL" -o "$WORK_DIR/release-pilot.tar.gz"
+curl -fsSL "${AUTH_HEADER[@]}" "$URL" -o "$WORK_DIR/release-pilot.tar.gz"
 tar -xzf "$WORK_DIR/release-pilot.tar.gz" -C "$WORK_DIR"
 install -m 755 "$WORK_DIR/release-pilot" /usr/local/bin/release-pilot
 

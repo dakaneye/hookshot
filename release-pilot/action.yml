@@ -48,6 +48,7 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: bash "$ACTION_PATH/install.sh"
 
     - name: Run release-pilot
