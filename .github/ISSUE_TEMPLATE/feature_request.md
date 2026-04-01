@@ -1,14 +1,19 @@
 ---
-name: Feature Request
-about: Suggest a new workflow, action, or improvement
+name: Feature request
+about: Suggest an idea for this project
+title: ''
 labels: enhancement
+assignees: ''
 ---
 
-**Description**
-What would you like to see added or changed?
+**Is your feature request related to a problem?**
+A clear description of the problem.
 
-**Use Case**
-Why do you need this?
+**Describe the solution you'd like**
+A clear description of what you want to happen.
 
-**Alternatives**
-Any workarounds you've considered?
+**Alternatives considered**
+Any alternative solutions or features you've considered.
+
+**Additional context**
+Any other context about the feature request.
