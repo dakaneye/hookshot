@@ -47,20 +47,17 @@ runs:
           gh release download "$RELEASE_TAG" --pattern "$ASSET" --dir "$WORK_DIR" --clobber \
             || { printf 'Error: download failed for asset %s\n' "$ASSET" >&2; exit 1; }
 
-          # Sign with cosign (keyless OIDC)
+          # Sign with cosign keyless OIDC — bundle is the canonical format
           cosign sign-blob --yes \
-            --output-signature "$WORK_DIR/${ASSET}.sig" \
-            --output-certificate "$WORK_DIR/${ASSET}.pem" \
             --bundle "$WORK_DIR/${ASSET}.bundle" \
             "$WORK_DIR/$ASSET" \
             || { printf 'Error: cosign signing failed for %s\n' "$ASSET" >&2; exit 1; }
 
-          # Upload signature and bundle to release
+          # Upload bundle to release
           gh release upload "$RELEASE_TAG" \
-            "$WORK_DIR/${ASSET}.sig" \
             "$WORK_DIR/${ASSET}.bundle" \
             --clobber \
-            || { printf 'Error: upload failed for signed assets of %s\n' "$ASSET" >&2; exit 1; }
+            || { printf 'Error: upload failed for bundle of %s\n' "$ASSET" >&2; exit 1; }
 
           echo "Signed: $ASSET"
         done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
