@@ -8,17 +8,11 @@ inputs:
     description: "Glob pattern to exclude assets from signing (e.g., '*.txt')"
     required: false
     default: ""
-  cosign-version:
-    description: "Cosign version to install"
-    required: false
-    default: "latest"
 runs:
   using: "composite"
   steps:
     - name: Install cosign
       uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
-      with:
-        cosign-release: ${{ inputs.cosign-version != 'latest' && inputs.cosign-version || '' }}
 
     - name: Sign release assets
       shell: bash
@@ -36,7 +30,7 @@ runs:
 
         while IFS= read -r ASSET; do
           # Skip signature and bundle files
-          if [[ "$ASSET" == *.sig || "$ASSET" == *.bundle ]]; then
+          if [[ "$ASSET" == *.sig || "$ASSET" == *.bundle || "$ASSET" == *.pem ]]; then
             echo "Skipping signature file: $ASSET"
             continue
           fi
