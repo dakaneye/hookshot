@@ -11,9 +11,12 @@ Reusable GitHub Actions workflows and composite actions for all `dakaneye/` repo
 
 ## Key Files
 
-- `KNOWN_CLIENTS.md` — which repos use which workflows, migration status, input overrides
 - `README.md` — usage examples for external consumers
 - `.github/workflows/ci.yml` — hookshot's own CI (actionlint + dogfood scan/codeql)
+
+## Skills
+
+- `known-clients` — look up which dakaneye/ repos consume hookshot workflows. Use before modifying any workflow to assess blast radius.
 
 ## Conventions
 

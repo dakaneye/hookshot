@@ -1,0 +1,74 @@
+{
+  "skill_name": "known-clients",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to rename the `skip-test` input to `no-test` across all CI workflows. What's the blast radius?",
+      "expected_output": "Should identify all consumer repos that currently pass skip-test (copilot-overlay uses it). Should warn that renaming an input is a breaking change for any caller already using it. Should suggest adding no-test as an alias or doing a two-step migration.",
+      "assertions": [
+        {
+          "name": "identifies_copilot_overlay",
+          "type": "contains",
+          "value": "copilot-overlay",
+          "description": "Must identify copilot-overlay as using skip-test"
+        },
+        {
+          "name": "warns_breaking_change",
+          "type": "semantic",
+          "value": "Renaming an input breaks existing callers",
+          "description": "Must warn this is a breaking change"
+        },
+        {
+          "name": "runs_live_check",
+          "type": "tool_use",
+          "value": "Bash",
+          "description": "Should query live repo state rather than relying on cached data"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Which repos are still on their old inline CI and haven't adopted hookshot callers yet?",
+      "expected_output": "Should run the discovery script to check which repos have hookshot references vs only inline CI. Should list repos with and without hookshot adoption.",
+      "assertions": [
+        {
+          "name": "queries_live_state",
+          "type": "tool_use",
+          "value": "Bash",
+          "description": "Should query GitHub API for current workflow state"
+        },
+        {
+          "name": "categorizes_repos",
+          "type": "semantic",
+          "value": "Lists repos that have adopted hookshot callers separately from those that haven't",
+          "description": "Must categorize repos by adoption status"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I just added a new required input to node-ci.yml without a default. Is that going to break anything?",
+      "expected_output": "Should immediately flag this as a breaking change. Should identify all node-ci consumers (copilot-overlay, copilot-money-mcp). Should recommend making the input optional with a default value instead.",
+      "assertions": [
+        {
+          "name": "flags_breaking",
+          "type": "semantic",
+          "value": "Adding a required input without a default breaks existing callers",
+          "description": "Must flag this as a breaking change"
+        },
+        {
+          "name": "identifies_node_consumers",
+          "type": "semantic",
+          "value": "copilot-overlay and copilot-money-mcp",
+          "description": "Must identify the Node.js consumer repos"
+        },
+        {
+          "name": "recommends_optional",
+          "type": "semantic",
+          "value": "Make the input optional with a default",
+          "description": "Must recommend the safe alternative"
+        }
+      ]
+    }
+  ]
+}
