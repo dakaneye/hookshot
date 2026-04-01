@@ -26,9 +26,15 @@ runs:
         WORK_DIR="$(mktemp -d)"
         trap 'rm -rf "$WORK_DIR"' EXIT
 
+        # Verify the release exists
+        gh release view "$RELEASE_TAG" --json tagName > /dev/null \
+          || { printf 'Error: release %s not found\n' "$RELEASE_TAG" >&2; exit 1; }
+
+        ASSET_COUNT=0
         echo "Signing assets for release $RELEASE_TAG"
 
         while IFS= read -r ASSET; do
+          [[ -n "$ASSET" ]] || continue
           # Skip signature and bundle files
           if [[ "$ASSET" == *.sig || "$ASSET" == *.bundle || "$ASSET" == *.pem ]]; then
             echo "Skipping signature file: $ASSET"
@@ -59,7 +65,12 @@ runs:
             --clobber \
             || { printf 'Error: upload failed for bundle of %s\n' "$ASSET" >&2; exit 1; }
 
+          ASSET_COUNT=$((ASSET_COUNT + 1))
           echo "Signed: $ASSET"
         done < <(gh release view "$RELEASE_TAG" --json assets --jq '.assets[].name')
 
-        echo "All assets signed."
+        if [[ "$ASSET_COUNT" -eq 0 ]]; then
+          echo "No signable assets found for release $RELEASE_TAG"
+        else
+          echo "Signed $ASSET_COUNT asset(s)."
+        fi
