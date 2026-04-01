@@ -23,6 +23,21 @@ on:
         type: boolean
         required: false
         default: false
+      skip-test:
+        description: "Skip the test step"
+        type: boolean
+        required: false
+        default: false
+      skip-lint:
+        description: "Skip the lint step"
+        type: boolean
+        required: false
+        default: false
+      apt-packages:
+        description: "Space-separated apt packages to install (e.g. 'libpcap-dev')"
+        type: string
+        required: false
+        default: ""
     secrets:
       codecov-token:
         required: false
@@ -36,6 +51,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Install apt packages
+        if: inputs.apt-packages != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ inputs.apt-packages }}
+
       - name: Set up Go
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
@@ -46,9 +65,14 @@ jobs:
         run: go build ./...
 
   test:
+    if: ${{ !inputs.skip-test }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install apt packages
+        if: inputs.apt-packages != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ inputs.apt-packages }}
 
       - name: Set up Go
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
@@ -76,9 +100,14 @@ jobs:
           token: ${{ secrets.codecov-token }}
 
   lint:
+    if: ${{ !inputs.skip-lint }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install apt packages
+        if: inputs.apt-packages != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ inputs.apt-packages }}
 
       - name: Set up Go
         uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0

@@ -18,6 +18,21 @@ on:
         type: string
         required: false
         default: "npm test"
+      skip-test:
+        description: "Skip the test step"
+        type: boolean
+        required: false
+        default: false
+      skip-lint:
+        description: "Skip the lint step (placeholder, no default linter configured)"
+        type: boolean
+        required: false
+        default: false
+      apt-packages:
+        description: "Space-separated apt packages to install (e.g. 'libsecret-1-dev')"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -27,6 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install apt packages
+        if: inputs.apt-packages != ''
+        run: sudo apt-get update && sudo apt-get install -y ${{ inputs.apt-packages }}
 
       - name: Set up Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
@@ -42,4 +61,5 @@ jobs:
         run: ${{ inputs.build-command }}
 
       - name: Test
+        if: ${{ !inputs.skip-test }}
         run: ${{ inputs.test-command }}
