@@ -1,5 +1,9 @@
 # hookshot
 
+[![CI](https://github.com/dakaneye/hookshot/actions/workflows/ci.yml/badge.svg)](https://github.com/dakaneye/hookshot/actions/workflows/ci.yml)
+[![Update v1 tag](https://github.com/dakaneye/hookshot/actions/workflows/update-v1-tag.yml/badge.svg)](https://github.com/dakaneye/hookshot/actions/workflows/update-v1-tag.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Reusable GitHub Actions workflows and composite actions for CI/CD.
 
 ## Reusable Workflows
