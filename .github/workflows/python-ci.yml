@@ -77,7 +77,7 @@ jobs:
         if: inputs.typecheck
         run: |
           pip install mypy
-          $RUNNER mypy .
+          ${RUNNER:+$RUNNER} mypy .
 
       - name: Test
         env:

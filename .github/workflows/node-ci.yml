@@ -9,7 +9,7 @@ on:
         required: false
         default: "22"
       build-command:
-        description: "Build command"
+        description: "Build command (empty string to skip)"
         type: string
         required: false
         default: "npm run build"
@@ -32,14 +32,17 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: ${{ inputs.node-version }}
-          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
         if: inputs.build-command != ''
-        run: ${{ inputs.build-command }}
+        env:
+          BUILD_CMD: ${{ inputs.build-command }}
+        run: $BUILD_CMD
 
       - name: Test
-        run: ${{ inputs.test-command }}
+        env:
+          TEST_CMD: ${{ inputs.test-command }}
+        run: $TEST_CMD
