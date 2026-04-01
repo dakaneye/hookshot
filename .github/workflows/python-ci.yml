@@ -80,12 +80,16 @@ jobs:
           $RUNNER mypy .
 
       - name: Test
+        env:
+          INPUT_CODECOV: ${{ inputs.codecov }}
+          INPUT_TEST_CMD: ${{ inputs.test-command }}
         run: |
-          if [[ "${{ inputs.codecov }}" == "true" ]]; then
+          set -Eeuo pipefail
+          if [[ "$INPUT_CODECOV" == "true" ]]; then
             pip install pytest-cov
-            $RUNNER ${{ inputs.test-command }} --cov --cov-report=xml
+            $RUNNER $INPUT_TEST_CMD --cov --cov-report=xml
           else
-            $RUNNER ${{ inputs.test-command }}
+            $RUNNER $INPUT_TEST_CMD
           fi
 
       - name: Upload coverage
