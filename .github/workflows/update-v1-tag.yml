@@ -1,0 +1,20 @@
+name: Update v1 tag
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Update floating v1 tag
+        run: |
+          set -Eeuo pipefail
+          git tag -f v1 -m "v1: $(git log -1 --format=%s)"
+          git push origin v1 --force
