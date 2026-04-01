@@ -1,21 +1,28 @@
 ---
-name: Bug Report
-about: Report a bug in a workflow or action
+name: Bug report
+about: Report something that isn't working
+title: ''
 labels: bug
+assignees: ''
 ---
 
-**Workflow/Action**
-Which workflow or action is affected?
+**Describe the bug**
+A clear description of what's wrong.
 
-**Description**
-What happened?
+**To reproduce**
+Steps to reproduce the behavior.
 
-**Expected Behavior**
-What should have happened?
-
-**Reproduction**
-Steps to reproduce, including the caller workflow YAML if applicable.
+**Expected behavior**
+What you expected to happen.
 
 **Environment**
-- Runner OS:
-- Action version/tag:
+- OS: [e.g. macOS 14.0]
+- Version: [e.g. 0.1.0]
+
+**Logs**
+```
+Paste relevant logs here
+```
+
+**Additional context**
+Any other relevant information.
