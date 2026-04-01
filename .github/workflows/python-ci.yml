@@ -85,11 +85,12 @@ jobs:
           INPUT_TEST_CMD: ${{ inputs.test-command }}
         run: |
           set -Eeuo pipefail
+          # shellcheck disable=SC2086
           if [[ "$INPUT_CODECOV" == "true" ]]; then
             pip install pytest-cov
-            $RUNNER $INPUT_TEST_CMD --cov --cov-report=xml
+            ${RUNNER:+$RUNNER} $INPUT_TEST_CMD --cov --cov-report=xml
           else
-            $RUNNER $INPUT_TEST_CMD
+            ${RUNNER:+$RUNNER} $INPUT_TEST_CMD
           fi
 
       - name: Upload coverage
