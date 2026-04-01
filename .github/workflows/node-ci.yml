@@ -36,13 +36,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # workflow_call inputs are from trusted caller YAML, not user event data
       - name: Build
         if: inputs.build-command != ''
-        env:
-          BUILD_CMD: ${{ inputs.build-command }}
-        run: $BUILD_CMD
+        run: ${{ inputs.build-command }}
 
       - name: Test
-        env:
-          TEST_CMD: ${{ inputs.test-command }}
-        run: $TEST_CMD
+        run: ${{ inputs.test-command }}
